@@ -11,12 +11,32 @@ public class PlayerInput : MonoBehaviour
     private LayerMask UnitLayers;
     [SerializeField]
     private LayerMask FloorLayers;
+    [SerializeField]
+    private float DragDelay = 0.1f;
 
+    private float MouseDownTime;
     private Vector2 StartMousePosition;
 
     private void Update()
     {
         HandleSelectionInputs();
+        HandleMovementInputs();
+    }
+
+    private void HandleMovementInputs()
+    {
+        // If right click and we have something selected
+        if (Input.GetKeyUp(KeyCode.Mouse1) && SelectionManager.Instance.SelectedUnits.Count > 0)
+        {
+            // If we clicked somewhere on the floor
+            if (Physics.Raycast(Camera.ScreenPointToRay(Input.mousePosition), out RaycastHit Hit, FloorLayers))
+            {
+                foreach(SelectableUnit Unit in SelectionManager.Instance.SelectedUnits)
+                {
+                    Unit.MoveTo(Hit.point);
+                }
+            }
+        }
     }
 
     private void HandleSelectionInputs()
@@ -29,9 +49,10 @@ public class PlayerInput : MonoBehaviour
 
             SelectionBox.gameObject.SetActive(true);
             StartMousePosition = Input.mousePosition;
+            MouseDownTime = Time.time;
         }
         // Left mouse button held down
-        else if (Input.GetKey(KeyCode.Mouse0))
+        else if (Input.GetKey(KeyCode.Mouse0) && MouseDownTime + DragDelay < Time.time)
         {
             ResizeSelectionBox();
         }
@@ -40,6 +61,39 @@ public class PlayerInput : MonoBehaviour
         {
             SelectionBox.sizeDelta = Vector2.zero;
             SelectionBox.gameObject.SetActive(false);
+
+            if(
+                // If we hit something, we'll have a reference to a RaycastHit
+                Physics.Raycast(Camera.ScreenPointToRay(Input.mousePosition), out RaycastHit hit, UnitLayers)
+                // Check if it has a selectable unit on it and get that reference
+                && hit.collider.TryGetComponent<SelectableUnit>(out SelectableUnit unit))
+            {
+                // If we're holding shift, add to selected units
+                if(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                {
+                    if(SelectionManager.Instance.IsSelected(unit))
+                    {
+                        SelectionManager.Instance.Deselect(unit);
+                    }
+                    else
+                    {
+                        SelectionManager.Instance.Select(unit);
+                    }
+                }
+                // If we're not holding shift, select that one unit
+                else
+                {
+                    SelectionManager.Instance.DeselectAll();
+                    SelectionManager.Instance.Select(unit);
+                }
+            }
+            // Deselect all if not clicking SelectableUnit and not doing SelectionBox
+            else if (MouseDownTime + DragDelay > Time.time)
+            {
+                SelectionManager.Instance.DeselectAll();
+            }
+
+            MouseDownTime = 0;
         }
     }
 
