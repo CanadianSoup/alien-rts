@@ -10,7 +10,7 @@ public class TestScript : MonoBehaviour
 
     private void Start()
     {
-        grid = new CustomGrid(4, 2, 3f);
+        grid = new CustomGrid(4, 2, 3f, Vector3.zero);
 
     }
 
@@ -23,6 +23,28 @@ public class TestScript : MonoBehaviour
         if (Input.GetMouseButtonDown(1))
         {
             Debug.Log(grid.GetValue(MousePosition3D.Instance.GetMouseWorldPosition()));
+        }
+    }
+
+    private class HeatMapVisual
+    {
+        private CustomGrid grid;
+
+        public HeatMapVisual(CustomGrid grid)
+        {
+            this.grid = grid;
+
+            Vector3[] vertices;
+            Vector2[] uv;
+            int[] triangles;
+
+            for (int x = 0; x < grid.GetWidth(); x++)
+            {
+                for (int y = 0; y < grid.GetHeight(); y++)
+                {
+
+                }
+            }
         }
     }
 }
