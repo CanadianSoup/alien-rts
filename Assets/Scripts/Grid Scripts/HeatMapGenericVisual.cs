@@ -3,10 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HeatMapVisual : MonoBehaviour
+public class HeatMapGenericVisual : MonoBehaviour
 {
 
-    private CustomGrid<int> grid;
+    private CustomGrid<HeatMapGridObject> grid;
     private Mesh mesh;
     private bool updateMesh;
 
@@ -16,7 +16,7 @@ public class HeatMapVisual : MonoBehaviour
         GetComponent<MeshFilter>().mesh = mesh;
     }
 
-    public void SetGrid(CustomGrid<int> grid)
+    public void SetGrid(CustomGrid<HeatMapGridObject> grid)
     {
         this.grid = grid;
         UpdateHeatMapVisual();
@@ -24,7 +24,7 @@ public class HeatMapVisual : MonoBehaviour
         grid.OnGridObjectChanged += Grid_OnGridObjectChanged;
     }
 
-    private void Grid_OnGridObjectChanged(object sender, CustomGrid<int>.OnGridObjectChangedEventArgs e)
+    private void Grid_OnGridObjectChanged(object sender, CustomGrid<HeatMapGridObject>.OnGridObjectChangedEventArgs e)
     {
         updateMesh = true;
     }
@@ -49,10 +49,10 @@ public class HeatMapVisual : MonoBehaviour
                 int index = x * grid.GetHeight() + y;
                 Vector3 quadSize = new Vector3(1, 1) * grid.GetCellSize();
 
-                int gridValue = grid.GetGridObject(x, y);
-                float gridValueNormalized = (float)gridValue / CustomGrid<int>.HEAT_MAP_MAX_VALUE;
+                HeatMapGridObject gridObject = grid.GetGridObject(x, y);
+                float gridValueNormalized = gridObject.GetValueNormalized();
 
-                Debug.Log("Grid value at (" + x + "," + y + ") is " + gridValue + " and the gridValueNormalized is " + gridValueNormalized);
+                Debug.Log("Grid value at (" + x + "," + y + ") is " + gridObject.GetValue() + " and the gridValueNormalized is " + gridValueNormalized);
 
                 Vector2 gridValueUV = new Vector2(gridValueNormalized, 0f);
 
