@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9500439e6584b624890b39d331c492c6, type: 3}
+  m_Name: PoliceStation
+  m_EditorClassIdentifier: 
+  nameString: Police Station
+  prefab: {fileID: 4782235985580720507, guid: cd927def65c88b744bb7ac3a0d4290a5, type: 3}
+  visual: {fileID: 2499414142690952232, guid: 5a75b059ed0f1714491cde7e19fa19d4, type: 3}
+  width: 0
+  height: 0
