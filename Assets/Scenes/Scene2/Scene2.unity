@@ -220,6 +220,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aef36d562220b944e88de25db89e21f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+<<<<<<< Updated upstream
+=======
+  mainSpeed: 100
+  shiftAdd: 250
+  maxShift: 1000
+  camSens: 0.25
+  lastMouse: {x: 255, y: 255, z: 255}
+  totalRun: 1
+>>>>>>> Stashed changes
 --- !u!114 &157997239
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -233,7 +242,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mouseColliderLayerMask:
+<<<<<<< Updated upstream
     serializedVersion: 2
+=======
+>>>>>>> Stashed changes
     m_Bits: 0
 --- !u!1 &792805714
 GameObject:
@@ -373,8 +385,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   placedObjectTypeSOList:
   - {fileID: 11400000, guid: 7babf3f7f4d6bc54d9130413fc704cc1, type: 2}
+<<<<<<< Updated upstream
   - {fileID: 11400000, guid: b849b211769ce1c42b1b4c11fcc8533d, type: 2}
   - {fileID: 11400000, guid: 709fc383cbbe34142b4a2e8ae48173f8, type: 2}
   - {fileID: 11400000, guid: 67175f7dc2641d44da6a9a121df9b1d3, type: 2}
   - {fileID: 11400000, guid: fa9af11f625862a4c9404b8b3890aec4, type: 2}
   - {fileID: 11400000, guid: b347ff2852da2c942aaefce20644d7b8, type: 2}
+=======
+  - {fileID: 11400000, guid: b347ff2852da2c942aaefce20644d7b8, type: 2}
+  placedObjectTypeSO: {fileID: 0}
+  dir: 0
+>>>>>>> Stashed changes
