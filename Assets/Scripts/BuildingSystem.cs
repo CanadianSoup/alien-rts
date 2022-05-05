@@ -85,9 +85,9 @@ public class BuildingSystem : MonoBehaviour
     public static Vector3 GetMouseWorldPosition()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit raycastHit))
+        if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            return raycastHit.point;
+            return hit.point;
         }
         else
         {
@@ -95,10 +95,22 @@ public class BuildingSystem : MonoBehaviour
         }
     }
 
+    public static GameObject GetClickedObject()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit))
+        {
+            return hit.transform.gameObject;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
     public Vector3 SnapCoordinateToGrid(Vector3 position)
     {
         Vector3Int cellPos = gridLayout.WorldToCell(position);
-        Debug.Log("Uncentered cellPos " + cellPos);
         position = grid.GetCellCenterWorld(cellPos);
         return position;
         //return new Vector3(position.x, 0, position.z);
