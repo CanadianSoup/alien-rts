@@ -14,9 +14,10 @@ public class BuildingSystem : MonoBehaviour
     private Tilemap MainTilemap;
     [SerializeField]
     private TileBase whiteTile;
+    [SerializeField]
+    private GameObject floor;
 
-    public GameObject prefab1;
-    public GameObject prefab2;
+    public GameObject prefab;
 
     private PlaceableObject objectToPlace;
 
@@ -28,31 +29,10 @@ public class BuildingSystem : MonoBehaviour
     {
         current = this;
         grid = gridLayout.gameObject.GetComponent<Grid>();
-
-
-
-        foreach (var position in MainTilemap.cellBounds.allPositionsWithin)
-        {
-            //Debug.Log(position);
-        }
     }
 
     private void Update()
     {
-        if(Input.GetMouseButtonDown(0))
-        {
-            PrintClickedCell();
-        }
-
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            InitializeWithObject(prefab1);
-        }
-        else if (Input.GetKeyDown(KeyCode.B))
-        {
-            InitializeWithObject(prefab2);
-        }
-
         if (!objectToPlace)
         {
             return;
@@ -65,10 +45,11 @@ public class BuildingSystem : MonoBehaviour
                 Debug.Log("Object can be placed");
                 objectToPlace.Place();
                 Vector3Int start = gridLayout.WorldToCell(objectToPlace.GetStartPosition());
-                TakeArea(start, objectToPlace.Size);
+                TakeArea(objectToPlace);
             }
             else
             {
+                Debug.Log("Object cannot be placed");
                 Destroy(objectToPlace.gameObject);
             }
         }
@@ -112,28 +93,38 @@ public class BuildingSystem : MonoBehaviour
     {
         Vector3Int cellPos = gridLayout.WorldToCell(position);
         position = grid.GetCellCenterWorld(cellPos);
-        return position;
-        //return new Vector3(position.x, 0, position.z);
+        if(objectToPlace)
+        {
+            return new Vector3(position.x, VerticallySnapToFloor(), position.z);
+        }
+        else
+        {
+            return position;
+        }
     }
 
-    private static TileBase[] GetTilesBlock(BoundsInt area, Tilemap tilemap)
+    private float VerticallySnapToFloor()
     {
-        TileBase[] array = new TileBase[area.size.x * area.size.y * area.size.z];
-        int counter = 0;
+        Mesh objectMesh = objectToPlace.GetComponent<MeshFilter>().mesh;
+        Mesh floorMesh = floor.GetComponent<MeshFilter>().mesh;
 
-        foreach (var v in area.allPositionsWithin)
+        Bounds objectBounds = objectMesh.bounds;
+        Bounds floorBounds = floorMesh.bounds;
+
+        float objectLowerBounds = objectBounds.min.y;
+        float floorUpperBounds = floorBounds.max.y;
+
+        if (objectLowerBounds < floorUpperBounds)
         {
-            Vector3Int pos = new Vector3Int(v.x, v.y, 0);
-            array[counter] = tilemap.GetTile(pos);
-            counter++;
+            return floorUpperBounds - objectLowerBounds;
+        }
+        else if (objectLowerBounds > floorUpperBounds)
+        {
+            return objectLowerBounds - floorUpperBounds;
         }
 
-        return array;
-    }
+        return objectToPlace.transform.position.y;
 
-    public static void PrintClickedCell()
-    {
-        Debug.Log("Clicked position " + current.SnapCoordinateToGrid(GetMouseWorldPosition()));
     }
 
     #endregion
@@ -142,26 +133,25 @@ public class BuildingSystem : MonoBehaviour
 
     public void InitializeWithObject(GameObject prefab)
     {
-        Vector3 position = SnapCoordinateToGrid(Vector3.zero);
-
-        GameObject obj = Instantiate(prefab, position, Quaternion.identity);
+        GameObject obj = Instantiate(prefab);
         objectToPlace = obj.GetComponent<PlaceableObject>();
         obj.AddComponent<ObjectDrag>();
+        Vector3 position = SnapCoordinateToGrid(GetMouseWorldPosition());
+        obj.transform.position = position;
     }
 
     private bool CanBePlaced(PlaceableObject placeableObject)
     {
         BoundsInt area = new BoundsInt();
         area.position = gridLayout.WorldToCell(objectToPlace.GetStartPosition());
-        area.size = new Vector3Int(area.size.x + 1, area.size.y + 1, area.size.z);
+        area.size = placeableObject.Size;
 
-        TileBase[] baseArray = GetTilesBlock(area, MainTilemap);
+        TileBase[] baseArray = MainTilemap.GetTilesBlock(area);
 
         foreach (var b in baseArray)
         {
             if (b == whiteTile)
             {
-                Debug.Log("TileBase " + b + "is a white tile");
                 return false;
             }
         }
@@ -169,13 +159,18 @@ public class BuildingSystem : MonoBehaviour
         return true;
     }
 
-    public void TakeArea(Vector3Int start, Vector3Int size)
+    public void TakeArea(PlaceableObject placeableObject)
     {
-        //Vector3Int minPos = new Vector3Int(start.x, start.y, 0);
-        //Vector3Int maxPos = new Vector3Int(start.x + size.x, start.y + size.y, 0);
-        //MainTilemap.SetTile(minPos, whiteTile);
-        //MainTilemap.SetTile(maxPos, whiteTile);
-        MainTilemap.BoxFill(start, whiteTile, start.x, start.y, start.x + size.x, start.y + size.y);
+        BoundsInt area = new BoundsInt();
+        area.position = gridLayout.WorldToCell(objectToPlace.GetStartPosition());
+        area.size = placeableObject.Size;
+
+        TileBase[] tileArray = new TileBase[area.x * area.y];
+        for (int index = 0; index < tileArray.Length; index++)
+        {
+            tileArray[index] = whiteTile;
+        }
+        MainTilemap.SetTilesBlock(area, tileArray);
     }
 
     #endregion

@@ -15,7 +15,6 @@ public class ObjectDrag : MonoBehaviour
     {
         Vector3 pos = BuildingSystem.GetMouseWorldPosition() + offset;
         Vector3 cellPos = BuildingSystem.current.SnapCoordinateToGrid(pos);
-        Debug.Log("Cell pos is " + cellPos);
         transform.position = cellPos;
     }
 }
