@@ -53,6 +53,11 @@ public class PlaceableObject : MonoBehaviour
 
         Placed = true;
 
+        // Make object opaque after placing
+        Color objectColor = gameObject.GetComponent<Renderer>().material.color;
+        objectColor.a = 1f;
+        gameObject.GetComponent<Renderer>().material.color = objectColor;
+
         //invoke events of placement
     }
 

@@ -28,14 +28,12 @@ public class SelectionManager
     {
         SelectedUnits.Add(Unit);
         Unit.OnSelected();
-        Debug.Log(Unit.name + " selected");
     }
 
     public void Deselect(SelectableUnit Unit)
     {
         Unit.OnDeselected();
         SelectedUnits.Remove(Unit);
-        Debug.Log(Unit.name + " deselected");
     }
 
     public void DeselectAll()
@@ -45,7 +43,6 @@ public class SelectionManager
             Unit.OnDeselected();
         }
         SelectedUnits.Clear();
-        Debug.Log("All units deselected");
     }
 
     public bool IsSelected(SelectableUnit Unit)

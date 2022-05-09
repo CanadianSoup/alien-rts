@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEngine.Events;
 
 public class BuildingSystem : MonoBehaviour
 {
@@ -16,8 +17,6 @@ public class BuildingSystem : MonoBehaviour
     private TileBase whiteTile;
     [SerializeField]
     private GameObject floor;
-
-    public GameObject prefab;
 
     private PlaceableObject objectToPlace;
 
@@ -40,12 +39,12 @@ public class BuildingSystem : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (CanBePlaced(objectToPlace))
+            if (CanBePlaced())
             {
                 Debug.Log("Object can be placed");
                 objectToPlace.Place();
                 Vector3Int start = gridLayout.WorldToCell(objectToPlace.GetStartPosition());
-                TakeArea(objectToPlace);
+                TakeArea();
             }
             else
             {
@@ -136,15 +135,21 @@ public class BuildingSystem : MonoBehaviour
         GameObject obj = Instantiate(prefab);
         objectToPlace = obj.GetComponent<PlaceableObject>();
         obj.AddComponent<ObjectDrag>();
+
+        // Make transparent when placing
+        Color objectColor = obj.GetComponent<Renderer>().material.color;
+        objectColor.a = 0.75f;
+        obj.GetComponent<Renderer>().material.color = objectColor;
+
         Vector3 position = SnapCoordinateToGrid(GetMouseWorldPosition());
         obj.transform.position = position;
     }
 
-    private bool CanBePlaced(PlaceableObject placeableObject)
+    public bool CanBePlaced()
     {
         BoundsInt area = new BoundsInt();
         area.position = gridLayout.WorldToCell(objectToPlace.GetStartPosition());
-        area.size = placeableObject.Size;
+        area.size = objectToPlace.Size;
 
         TileBase[] baseArray = MainTilemap.GetTilesBlock(area);
 
@@ -159,18 +164,23 @@ public class BuildingSystem : MonoBehaviour
         return true;
     }
 
-    public void TakeArea(PlaceableObject placeableObject)
+    public void TakeArea()
     {
         BoundsInt area = new BoundsInt();
         area.position = gridLayout.WorldToCell(objectToPlace.GetStartPosition());
-        area.size = placeableObject.Size;
+        area.size = objectToPlace.Size;
 
-        TileBase[] tileArray = new TileBase[area.x * area.y];
+        TileBase[] tileArray = new TileBase[area.size.x * area.size.y];
         for (int index = 0; index < tileArray.Length; index++)
         {
             tileArray[index] = whiteTile;
         }
         MainTilemap.SetTilesBlock(area, tileArray);
+    }
+
+    public bool PlacingObject()
+    {
+        return objectToPlace != null && !objectToPlace.Placed;
     }
 
     #endregion

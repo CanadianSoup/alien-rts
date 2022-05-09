@@ -42,7 +42,7 @@ public class PlayerInput : MonoBehaviour
     private void HandleSelectionInputs()
     {
         // Left mouse button clicked
-        if (Input.GetKeyDown(KeyCode.Mouse0))
+        if (Input.GetKeyDown(KeyCode.Mouse0) && !BuildingSystem.current.PlacingObject())
         {
             // So we don't see any residual value from the previous time
             SelectionBox.sizeDelta = Vector2.zero;
@@ -52,7 +52,7 @@ public class PlayerInput : MonoBehaviour
             MouseDownTime = Time.time;
         }
         // Left mouse button held down
-        else if (Input.GetKey(KeyCode.Mouse0) && MouseDownTime + DragDelay < Time.time)
+        else if (Input.GetKey(KeyCode.Mouse0) && MouseDownTime + DragDelay < Time.time && !BuildingSystem.current.PlacingObject())
         {
             ResizeSelectionBox();
         }

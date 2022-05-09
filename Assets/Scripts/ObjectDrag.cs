@@ -13,8 +13,18 @@ public class ObjectDrag : MonoBehaviour
 
     private void OnMouseDrag()
     {
-        Vector3 pos = BuildingSystem.GetMouseWorldPosition() + offset;
-        Vector3 cellPos = BuildingSystem.current.SnapCoordinateToGrid(pos);
+        Vector3 originalPosition = transform.position;
+        Vector3 positionWithOffset = BuildingSystem.GetMouseWorldPosition() + offset;
+        Vector3 cellPos = BuildingSystem.current.SnapCoordinateToGrid(positionWithOffset);
         transform.position = cellPos;
+        if(BuildingSystem.current.CanBePlaced())
+        {
+            return;
+        }
+        else
+        {
+            transform.position = originalPosition;
+        }
+        
     }
 }

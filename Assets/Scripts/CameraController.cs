@@ -13,8 +13,17 @@ public class CameraController : MonoBehaviour
     public float minY = 5f;
     public float maxY = 300f;
 
+    private Vector3 originalPosition;
+
+    private void Start()
+    {
+        originalPosition = transform.position;
+    }
+
     void Update()
     {
+
+        // WASD + Arrow Keys + Mouse movement
         float xAxisValue = 0.0f;
         float yAxisValue = 0.0f;
 
@@ -47,10 +56,19 @@ public class CameraController : MonoBehaviour
 
         Camera.main.transform.Translate(new Vector3(xAxisValue, yAxisValue, 0.0f));
 
+
+        // Mouse ScrollWheel Zoom
         if (Input.GetAxis("Mouse ScrollWheel") != 0f)
         {
             float zoom = Camera.main.orthographicSize - Input.GetAxis("Mouse ScrollWheel") * 100f * scrollSpeed * Time.deltaTime;
             Camera.main.orthographicSize = Mathf.Clamp(zoom, minY, maxY);
+        }
+
+
+        // Reset Camera to original position
+        if (Input.GetKeyDown(KeyCode.Backspace))
+        {
+            transform.position = originalPosition;
         }
     }
 }
