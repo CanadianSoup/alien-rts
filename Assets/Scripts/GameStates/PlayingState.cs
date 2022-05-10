@@ -1,27 +1,42 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerInput : MonoBehaviour
+public class PlayingState : GameState
 {
-    [SerializeField]
-    private Camera Camera;
-    [SerializeField]
+    #region Variables
+
     private RectTransform SelectionBox;
-    [SerializeField]
     private LayerMask UnitLayers;
-    [SerializeField]
     private LayerMask FloorLayers;
-    [SerializeField]
+
     private float DragDelay = 0.1f;
 
     private float MouseDownTime;
     private Vector2 StartMousePosition;
 
-    private void Update()
+    #endregion
+
+    public PlayingState(GameController gameController, GameStateMachine gameStateMachine) : base(gameController, gameStateMachine)
     {
+        this.SelectionBox = gameController.SelectionBox;
+        this.UnitLayers = gameController.UnitLayers;
+        this.FloorLayers = gameController.FloorLayers;
+    }
+
+    #region State Methods
+
+    public override void HandleInput()
+    {
+        base.HandleInput();
+
         HandleSelectionInputs();
         HandleMovementInputs();
     }
+
+    #endregion
+
+    #region Local Methods
 
     private void HandleMovementInputs()
     {
@@ -29,9 +44,9 @@ public class PlayerInput : MonoBehaviour
         if (Input.GetKeyUp(KeyCode.Mouse1) && SelectionManager.Instance.SelectedUnits.Count > 0)
         {
             // If we clicked somewhere on the floor
-            if (Physics.Raycast(Camera.ScreenPointToRay(Input.mousePosition), out RaycastHit Hit, FloorLayers))
+            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit Hit, this.gameController.FloorLayers))
             {
-                foreach(SelectableUnit Unit in SelectionManager.Instance.SelectedUnits)
+                foreach (SelectableUnit Unit in SelectionManager.Instance.SelectedUnits)
                 {
                     Unit.MoveTo(Hit.point);
                 }
@@ -42,7 +57,7 @@ public class PlayerInput : MonoBehaviour
     private void HandleSelectionInputs()
     {
         // Left mouse button clicked
-        if (Input.GetKeyDown(KeyCode.Mouse0) && !BuildingSystem.current.PlacingObject())
+        if (Input.GetKeyDown(KeyCode.Mouse0))
         {
             // So we don't see any residual value from the previous time
             SelectionBox.sizeDelta = Vector2.zero;
@@ -52,7 +67,7 @@ public class PlayerInput : MonoBehaviour
             MouseDownTime = Time.time;
         }
         // Left mouse button held down
-        else if (Input.GetKey(KeyCode.Mouse0) && MouseDownTime + DragDelay < Time.time && !BuildingSystem.current.PlacingObject())
+        else if (Input.GetKey(KeyCode.Mouse0) && MouseDownTime + DragDelay < Time.time)
         {
             ResizeSelectionBox();
         }
@@ -62,16 +77,16 @@ public class PlayerInput : MonoBehaviour
             SelectionBox.sizeDelta = Vector2.zero;
             SelectionBox.gameObject.SetActive(false);
 
-            if(
+            if (
                 // If we hit something, we'll have a reference to a RaycastHit
-                Physics.Raycast(Camera.ScreenPointToRay(Input.mousePosition), out RaycastHit hit, UnitLayers)
+                Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit, UnitLayers)
                 // Check if it has a selectable unit on it and get that reference
                 && hit.collider.TryGetComponent<SelectableUnit>(out SelectableUnit unit))
             {
                 // If we're holding shift, add to selected units
-                if(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                 {
-                    if(SelectionManager.Instance.IsSelected(unit))
+                    if (SelectionManager.Instance.IsSelected(unit))
                     {
                         SelectionManager.Instance.Deselect(unit);
                     }
@@ -133,7 +148,7 @@ public class PlayerInput : MonoBehaviour
             /* WorldToScreenPoint converts a unit in world space to our screen space coordinates so we
              * can check if that falls within the bounds we created for our selection box. We will pass
              * in the world space coordinates for our unit*/
-            if(UnitIsInSelectionBox(Camera.WorldToScreenPoint(SelectionManager.Instance.AvailableUnits[i].transform.position), bounds))
+            if (UnitIsInSelectionBox(Camera.main.WorldToScreenPoint(SelectionManager.Instance.AvailableUnits[i].transform.position), bounds))
             {
                 SelectionManager.Instance.Select(SelectionManager.Instance.AvailableUnits[i]);
             }
@@ -151,4 +166,6 @@ public class PlayerInput : MonoBehaviour
             && Position.y > Bounds.min.y
             && Position.y < Bounds.max.y;
     }
+
+    #endregion
 }

@@ -1,38 +1,48 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using UnityEngine.Events;
+using UnityEngine.UI;
 
-public class BuildingSystem : MonoBehaviour
+
+public delegate void DoneBuildingDelegate();
+
+public class BuildingState : GameState
 {
-    public static BuildingSystem current;
+    #region Variables
 
-    public GridLayout gridLayout;
-    private Grid grid;
+    public static BuildingState current;
 
-    [SerializeField]
+    public event DoneBuildingDelegate DoneBuildingEvent;
+
+    public GridLayout GridLayout;
+    private Grid Grid;
     private Tilemap MainTilemap;
-    [SerializeField]
-    private TileBase whiteTile;
-    [SerializeField]
-    private GameObject floor;
+    private TileBase WhiteTile;
+    private GameObject Floor;
+    private Button Button;
 
-    private PlaceableObject objectToPlace;
+    private PlaceableObject ObjectToPlace;
 
-    public List<Vector3> availablePlaces;
+    #endregion
 
-    #region Unity methods
-
-    private void Awake()
+    public BuildingState(GameController gameController, GameStateMachine gameStateMachine) : base(gameController, gameStateMachine)
     {
         current = this;
-        grid = gridLayout.gameObject.GetComponent<Grid>();
+        GridLayout = gameController.GridLayout;
+        Grid = GridLayout.gameObject.GetComponent<Grid>();
+        MainTilemap = gameController.MainTilemap;
+        WhiteTile = (TileBase) Resources.Load("white_tile");
+        Floor = gameController.Floor;
+        Button = gameController.Button;
     }
 
-    private void Update()
+    #region State Methods
+
+
+    public override void HandleInput()
     {
-        if (!objectToPlace)
+        base.HandleInput();
+
+        if (!ObjectToPlace)
         {
             return;
         }
@@ -42,25 +52,27 @@ public class BuildingSystem : MonoBehaviour
             if (CanBePlaced())
             {
                 Debug.Log("Object can be placed");
-                objectToPlace.Place();
-                Vector3Int start = gridLayout.WorldToCell(objectToPlace.GetStartPosition());
+                ObjectToPlace.Place();
                 TakeArea();
+                SendDoneBuildingEvent();
             }
             else
             {
                 Debug.Log("Object cannot be placed");
-                Destroy(objectToPlace.gameObject);
+                Object.Destroy(ObjectToPlace.gameObject);
+                SendDoneBuildingEvent();
             }
         }
         else if (Input.GetKeyDown(KeyCode.Escape))
         {
-            Destroy(objectToPlace.gameObject);
+            Object.Destroy(ObjectToPlace.gameObject);
+            SendDoneBuildingEvent();
         }
     }
 
     #endregion
 
-    #region Utils
+    #region Local Utils
 
     public static Vector3 GetMouseWorldPosition()
     {
@@ -90,9 +102,9 @@ public class BuildingSystem : MonoBehaviour
 
     public Vector3 SnapCoordinateToGrid(Vector3 position)
     {
-        Vector3Int cellPos = gridLayout.WorldToCell(position);
-        position = grid.GetCellCenterWorld(cellPos);
-        if(objectToPlace)
+        Vector3Int cellPos = GridLayout.WorldToCell(position);
+        position = Grid.GetCellCenterWorld(cellPos);
+        if (ObjectToPlace)
         {
             return new Vector3(position.x, VerticallySnapToFloor(), position.z);
         }
@@ -104,8 +116,8 @@ public class BuildingSystem : MonoBehaviour
 
     private float VerticallySnapToFloor()
     {
-        Mesh objectMesh = objectToPlace.GetComponent<MeshFilter>().mesh;
-        Mesh floorMesh = floor.GetComponent<MeshFilter>().mesh;
+        Mesh objectMesh = ObjectToPlace.GetComponent<MeshFilter>().mesh;
+        Mesh floorMesh = Floor.GetComponent<MeshFilter>().mesh;
 
         Bounds objectBounds = objectMesh.bounds;
         Bounds floorBounds = floorMesh.bounds;
@@ -122,18 +134,18 @@ public class BuildingSystem : MonoBehaviour
             return objectLowerBounds - floorUpperBounds;
         }
 
-        return objectToPlace.transform.position.y;
+        return ObjectToPlace.transform.position.y;
 
     }
 
     #endregion
 
-    #region Building Placement
+    #region Local Methods
 
     public void InitializeWithObject(GameObject prefab)
     {
-        GameObject obj = Instantiate(prefab);
-        objectToPlace = obj.GetComponent<PlaceableObject>();
+        GameObject obj = Object.Instantiate(prefab);
+        ObjectToPlace = obj.GetComponent<PlaceableObject>();
         obj.AddComponent<ObjectDrag>();
 
         // Make transparent when placing
@@ -148,14 +160,14 @@ public class BuildingSystem : MonoBehaviour
     public bool CanBePlaced()
     {
         BoundsInt area = new BoundsInt();
-        area.position = gridLayout.WorldToCell(objectToPlace.GetStartPosition());
-        area.size = objectToPlace.Size;
+        area.position = GridLayout.WorldToCell(ObjectToPlace.GetStartPosition());
+        area.size = ObjectToPlace.Size;
 
         TileBase[] baseArray = MainTilemap.GetTilesBlock(area);
 
         foreach (var b in baseArray)
         {
-            if (b == whiteTile)
+            if (b == WhiteTile)
             {
                 return false;
             }
@@ -167,20 +179,27 @@ public class BuildingSystem : MonoBehaviour
     public void TakeArea()
     {
         BoundsInt area = new BoundsInt();
-        area.position = gridLayout.WorldToCell(objectToPlace.GetStartPosition());
-        area.size = objectToPlace.Size;
+        area.position = GridLayout.WorldToCell(ObjectToPlace.GetStartPosition());
+        area.size = ObjectToPlace.Size;
 
         TileBase[] tileArray = new TileBase[area.size.x * area.size.y];
         for (int index = 0; index < tileArray.Length; index++)
         {
-            tileArray[index] = whiteTile;
+            tileArray[index] = WhiteTile;
         }
         MainTilemap.SetTilesBlock(area, tileArray);
     }
 
-    public bool PlacingObject()
+    public void SendDoneBuildingEvent()
     {
-        return objectToPlace != null && !objectToPlace.Placed;
+        if (DoneBuildingEvent != null)
+        {
+            DoneBuildingEvent();
+        }
+        else
+        {
+            Debug.LogWarning("DoneBuildingEvent is NULL");
+        }
     }
 
     #endregion
